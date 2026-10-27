@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AutoRent — прокат автомобилей</title>
+<meta name="description" content="Прокат автомобилей: автопарк, клиенты и аренды.">
+<link rel="icon" href="/img/logo.svg" type="image/svg+xml">
+<style>
+  :root{
+    --bg:#070b16; --bg2:#0d1424; --card:#111a2e; --card2:#16223b;
+    --line:rgba(148,163,184,.16); --text:#e6edf8; --muted:#93a1ba;
+    --a1:#22d3ee; --a2:#6366f1; --ok:#34d399; --bad:#fb7185; --warn:#fbbf24;
+    --r:20px; --max:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:80px}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased}
+  img{max-width:100%;display:block}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:100%;max-width:var(--max);margin-inline:auto;padding-inline:24px}
+  .grad{background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ---------- NAV ---------- */
+  header.nav{position:fixed;inset:0 0 auto 0;z-index:50;transition:.3s}
+  header.nav.solid{background:rgba(7,11,22,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:.2px}
+  .brand img{width:34px;height:34px}
+  nav.links{display:flex;gap:6px}
+  nav.links a{padding:8px 14px;border-radius:999px;color:var(--muted);font-weight:500;font-size:.95rem;transition:.2s}
+  nav.links a:hover{color:#fff;background:rgba(255,255,255,.07)}
+  .burger{display:none;background:none;border:0;color:#fff;font-size:1.7rem;cursor:pointer}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;border-radius:999px;border:1px solid transparent;font:600 .98rem/1 inherit;font-family:inherit;cursor:pointer;transition:.25s}
+  .btn-primary{background:linear-gradient(90deg,var(--a1),var(--a2));color:#04101f;box-shadow:0 10px 30px -8px rgba(34,211,238,.55)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 38px -8px rgba(99,102,241,.7)}
+  .btn-ghost{background:rgba(255,255,255,.06);border-color:var(--line);color:#fff;backdrop-filter:blur(8px)}
+  .btn-ghost:hover{background:rgba(255,255,255,.14)}
+  .btn-sm{padding:9px 16px;font-size:.88rem}
+  .btn-danger{background:rgba(251,113,133,.12);color:var(--bad);border-color:rgba(251,113,133,.3)}
+  .btn-danger:hover{background:rgba(251,113,133,.25)}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;min-height:100svh;display:grid;place-items:center;text-align:center;overflow:hidden;isolation:isolate}
+  .hero video,.hero .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3}
+  .hero::before{content:"";position:absolute;inset:0;z-index:-2;background:
+    radial-gradient(70% 55% at 50% 45%,rgba(7,11,22,.05),rgba(7,11,22,.55) 85%),
+    linear-gradient(to bottom,rgba(7,11,22,.45),rgba(7,11,22,0) 35%,rgba(7,11,22,0) 70%,var(--bg))}
+  .hero-in{padding:120px 24px 150px;max-width:980px}
+  .status{display:none;align-items:center;align-items:center;gap:10px;padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid var(--line);backdrop-filter:blur(10px);font-size:.9rem;color:#cbd5e1}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 0 rgba(251,191,36,.6);animation:pulse 2s infinite}
+  .dot.ok{background:var(--ok);box-shadow:0 0 0 0 rgba(52,211,153,.6)}
+  @keyframes pulse{70%{box-shadow:0 0 0 12px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
+  .hero h1{font-size:clamp(2.1rem,5vw,3.9rem);line-height:1.08;font-weight:850;letter-spacing:-.02em;margin:22px 0 18px}
+  .hero p.lead{text-shadow:0 2px 16px rgba(0,0,0,.7);font-size:clamp(1.02rem,2vw,1.28rem);color:#c3cee0;max-width:660px;margin-inline:auto}
+  .cta{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:34px}
+  .scroll{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);width:26px;height:42px;border:2px solid rgba(255,255,255,.4);border-radius:14px}
+  .scroll::after{content:"";position:absolute;left:50%;top:8px;width:4px;height:8px;border-radius:2px;background:#fff;transform:translateX(-50%);animation:wheel 1.6s infinite}
+  @keyframes wheel{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,14px)}}
+
+  /* ---------- SECTIONS ---------- */
+  section{padding:84px 0}
+  .head{text-align:center;max-width:680px;margin:0 auto 46px}
+  .eyebrow{display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--a1);margin-bottom:12px}
+  .head h2{font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.12;font-weight:800;letter-spacing:-.01em}
+  .head p{color:var(--muted);margin-top:12px}
+
+  /* stats */
+  .stats{margin-top:-64px;position:relative;z-index:5;padding:0}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .stat{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--r);padding:26px 22px;text-align:center;box-shadow:0 24px 50px -24px #000}
+  .stat b{display:block;font-size:2.6rem;line-height:1;font-weight:850}
+  .stat span{display:block;margin-top:8px;color:var(--muted);font-size:.93rem}
+
+  /* catalog */
+  .tools{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:34px}
+  .field{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:14px;padding:13px 16px;font:inherit;outline:0;transition:.2s}
+  .field:focus{border-color:var(--a1);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
+  .tools .field{min-width:200px}
+  .tools input.field{flex:1 1 280px;max-width:420px}
+  select.field option{background:#111a2e}
+  .cars{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .car{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;transition:.3s}
+  .car:hover{transform:translateY(-6px);box-shadow:0 30px 60px -30px #000;border-color:rgba(99,102,241,.5)}
+  .car .pic{position:relative;aspect-ratio:16/10;overflow:hidden;background:radial-gradient(80% 80% at 50% 100%,rgba(99,102,241,.28),transparent 70%),linear-gradient(180deg,#1b2a47,#142038)}
+  .car .pic img{width:100%;height:100%}
+  .car .pic img.svg{object-fit:contain;padding:34px 24px 10px}
+  .car .pic img.ph{object-fit:cover}
+  .car .pic img{transition:transform .5s}
+  .car:hover .pic img{transform:scale(1.06)}
+  .tag{position:absolute;top:14px;left:14px;font-size:.76rem;font-weight:700;padding:5px 11px;border-radius:999px;background:rgba(7,11,22,.6);backdrop-filter:blur(8px);border:1px solid var(--line)}
+  .state{position:absolute;top:14px;right:14px;font-size:.76rem;font-weight:700;padding:5px 11px;border-radius:999px}
+  .state.on{background:rgba(52,211,153,.16);color:var(--ok);border:1px solid rgba(52,211,153,.35)}
+  .state.off{background:rgba(251,113,133,.14);color:var(--bad);border:1px solid rgba(251,113,133,.35)}
+  .car .body{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1}
+  .car h3{font-size:1.25rem}
+  .car .sub{color:var(--muted);font-size:.9rem;margin:3px 0 12px}
+  .specs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .specs span{font-size:.8rem;color:#c3cee0;background:rgba(255,255,255,.05);border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+  .car .desc{color:var(--muted);font-size:.9rem;margin-bottom:16px}
+  .car .foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .price{font-size:1.5rem;font-weight:800}
+  .price small{font-size:.8rem;color:var(--muted);font-weight:500}
+  .acts{display:flex;gap:8px}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:50px;border:1px dashed var(--line);border-radius:var(--r)}
+  .addrow{display:flex;justify-content:center;margin-top:34px}
+
+
+  /* clients */
+  .people{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .person{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:14px;transition:.3s}
+  .person:hover{transform:translateY(-5px);border-color:rgba(34,211,238,.4)}
+  .ph-top{display:flex;align-items:center;gap:14px}
+  .avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1.1rem;color:#04101f;background:linear-gradient(135deg,var(--a1),var(--a2));flex:none}
+  .person h3{font-size:1.08rem;line-height:1.25}
+  .person .meta{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:.92rem}
+  .person .meta b{color:#dbe5f6;font-weight:600}
+  .person .cnt{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+  .person .acts{margin-top:auto;flex-wrap:wrap}
+  .rtools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .navbtn{display:inline-flex}
+
+  /* rentals */
+  .tbl{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .tbl .scroll-x{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:720px}
+  th,td{padding:15px 20px;text-align:left;font-size:.94rem}
+  th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,255,255,.03)}
+  tr+tr td{border-top:1px solid var(--line)}
+  .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:.78rem;font-weight:700}
+  .pill.active{background:rgba(34,211,238,.14);color:var(--a1)}
+  .pill.completed{background:rgba(148,163,184,.15);color:#cbd5e1}
+
+  footer{border-top:1px solid var(--line);padding:38px 0;color:var(--muted);font-size:.9rem;background:var(--bg2)}
+  .foot-in{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+
+  /* modal */
+  .modal{position:fixed;inset:0;z-index:100;display:none;place-items:center;background:rgba(3,6,14,.72);backdrop-filter:blur(6px);padding:20px}
+  .modal.open{display:grid}
+  .sheet{width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:30px;animation:pop .25s}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}}
+  .sheet h3{font-size:1.4rem;margin-bottom:20px}
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form label{display:flex;flex-direction:column;gap:6px;font-size:.84rem;color:var(--muted)}
+  .form .full{grid-column:1/-1}
+  .form .field{width:100%}
+  .check{flex-direction:row!important;align-items:center;gap:10px!important}
+  .check input{width:18px;height:18px;accent-color:var(--a1)}
+  .err{grid-column:1/-1;color:var(--bad);font-size:.88rem;background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);border-radius:12px;padding:10px 14px;display:none}
+  .mact{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+  .sum{grid-column:1/-1;display:flex;justify-content:space-between;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);border-radius:12px;padding:12px 16px;font-weight:700}
+
+  /* toast */
+  #toasts{position:fixed;right:20px;bottom:20px;z-index:200;display:flex;flex-direction:column;gap:10px}
+  .toast{background:#0f1a30;border:1px solid var(--line);border-left:4px solid var(--ok);padding:13px 18px;border-radius:12px;box-shadow:0 18px 40px -16px #000;animation:pop .25s;max-width:340px;font-size:.93rem}
+  .toast.bad{border-left-color:var(--bad)}
+
+  /* reveal */
+  .rv{opacity:0;transform:translateY(26px);transition:opacity .7s,transform .7s}
+  .rv.in{opacity:1;transform:none}
+
+  /* responsive */
+  @media (max-width:980px){
+    .cars,.people{grid-template-columns:repeat(2,1fr)}
+    .stat-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:720px){
+    nav.links{position:absolute;top:68px;left:0;right:0;flex-direction:column;background:rgba(7,11,22,.97);padding:12px 24px 20px;border-bottom:1px solid var(--line);display:none}
+    nav.links.open{display:flex}
+    .burger{display:block}
+    .cars,.people{grid-template-columns:1fr}
+    .form{grid-template-columns:1fr}
+    section{padding:64px 0}
+    .stats{margin-top:-50px}
+    .stat b{font-size:2.1rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .rv{opacity:1;transform:none}
+    .hero video{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a href="#top" class="brand"><img src="/img/logo.svg" alt="">AutoRent</a>
+    <button class="burger" id="burger" aria-label="Меню">☰</button>
+    <nav class="links" id="links">
+      <a href="#catalog">Автопарк</a>
+      <a href="#clients">Клиенты</a>
+      <a href="#rentals">Аренды</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <img class="poster" src="/img/hero-poster.jpg" alt="">
+  <video autoplay muted loop playsinline preload="auto" poster="/img/hero-poster.jpg">
+    <source src="/video/road.mp4" type="video/mp4">
+  </video>
+  <div class="hero-in">
+    <h1>Прокат автомобилей<br><span class="grad">на любой маршрут</span></h1>
+    <p class="lead">Выберите автомобиль, оформите аренду за пару минут и отправляйтесь в путь.</p>
+    <div class="cta">
+      <a href="#catalog" class="btn btn-primary">Смотреть автопарк</a>
+      <a href="#rentals" class="btn btn-ghost">Мои аренды</a>
+    </div>
+  </div>
+  <div class="scroll"></div>
+</div>
+
+<section class="stats">
+  <div class="wrap">
+    <div class="stat-grid rv">
+      <div class="stat"><b class="grad" data-k="totalCars">0</b><span>Автомобилей в парке</span></div>
+      <div class="stat"><b style="color:var(--ok)" data-k="availableCars">0</b><span>Свободны сейчас</span></div>
+      <div class="stat"><b style="color:var(--a1)" data-k="totalCustomers">0</b><span>Клиентов</span></div>
+      <div class="stat"><b style="color:var(--warn)" data-k="activeRentals">0</b><span>Активных аренд</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ АВТОПАРК ============ -->
+<section id="catalog">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Автопарк</span>
+      <h2>Выберите свой <span class="grad">автомобиль</span></h2>
+    </div>
+    <div class="tools rv">
+      <input class="field" id="fSearch" type="search" placeholder="🔎 Поиск по марке или модели">
+      <select class="field" id="fCat">
+        <option value="">Все категории</option>
+        <option value="Economy">Эконом</option><option value="Comfort">Комфорт</option>
+        <option value="Business">Бизнес</option><option value="Suv">Внедорожник</option>
+        <option value="Minivan">Минивэн</option>
+      </select>
+      <select class="field" id="fAvail">
+        <option value="">Все автомобили</option>
+        <option value="true">Только свободные</option>
+        <option value="false">Только в аренде</option>
+      </select>
+    </div>
+    <div class="cars" id="cars"></div>
+    <div class="addrow"><button class="btn btn-primary" id="btnAddCar">＋ Добавить автомобиль</button></div>
+  </div>
+</section>
+
+<!-- ============ КЛИЕНТЫ ============ -->
+<section id="clients" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Клиенты</span>
+      <h2>Наши <span class="grad">клиенты</span></h2>
+    </div>
+    <div class="people" id="people"></div>
+    <div class="addrow"><button class="btn btn-primary" id="btnAddCust">＋ Добавить клиента</button></div>
+  </div>
+</section>
+
+<!-- ============ АРЕНДЫ ============ -->
+<section id="rentals">
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Аренды</span>
+      <h2>Журнал <span class="grad">аренд</span></h2>
+    </div>
+    <div class="rtools rv">
+      <select class="field" id="fRent">
+        <option value="">Все аренды</option>
+        <option value="Active">Активные</option>
+        <option value="Completed">Завершённые</option>
+      </select>
+      <button class="btn btn-primary" id="btnNewRent">＋ Оформить аренду</button>
+    </div>
+    <div class="tbl rv"><div class="scroll-x">
+      <table>
+        <thead><tr><th>№</th><th>Автомобиль</th><th>Клиент</th><th>Период</th><th>Стоимость</th><th>Статус</th><th></th></tr></thead>
+        <tbody id="rentRows"></tbody>
+      </table>
+    </div></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div><b style="color:#fff">AutoRent</b> · прокат автомобилей</div>
+    <div>© 2026</div>
+  </div>
+</footer>
+
+<!-- ============ ОКНО: автомобиль ============ -->
+<div class="modal" id="mCar">
+  <div class="sheet">
+    <h3 id="carTitle">Новый автомобиль</h3>
+    <div class="form" id="carForm">
+      <label>Марка<input class="field" name="brand" placeholder="Skoda"></label>
+      <label>Модель<input class="field" name="model" placeholder="Octavia"></label>
+      <label>Год выпуска<input class="field" name="year" type="number" value="2024"></label>
+      <label>Мест<input class="field" name="seats" type="number" value="5"></label>
+      <label>Категория
+        <select class="field" name="category">
+          <option value="Economy">Эконом</option><option value="Comfort">Комфорт</option>
+          <option value="Business">Бизнес</option><option value="Suv">Внедорожник</option>
+          <option value="Minivan">Минивэн</option>
+        </select></label>
+      <label>Коробка
+        <select class="field" name="transmission"><option value="Automatic">Автомат</option><option value="Manual">Механика</option></select></label>
+      <label>Топливо
+        <select class="field" name="fuelType"><option value="Petrol">Бензин</option><option value="Diesel">Дизель</option><option value="Electric">Электро</option><option value="Hybrid">Гибрид</option></select></label>
+      <label>Цена за сутки, руб.<input class="field" name="dailyPrice" type="number" value="80"></label>
+      <label class="full">Ссылка на фото (необязательно)<input class="field" name="imageUrl" placeholder="https://…/photo.jpg"></label>
+      <label class="full">Описание<textarea class="field" name="description" rows="2" placeholder="Коротко об автомобиле"></textarea></label>
+      <label class="check full"><input type="checkbox" name="isAvailable" checked> Доступен для аренды</label>
+      <div class="err" id="carErr"></div>
+    </div>
+    <div class="mact">
+      <button class="btn btn-ghost btn-sm" data-close>Отмена</button>
+      <button class="btn btn-primary btn-sm" id="carSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ОКНО: клиент ============ -->
+<div class="modal" id="mCust">
+  <div class="sheet">
+    <h3 id="custTitle">Новый клиент</h3>
+    <div class="form" id="custForm">
+      <label class="full">ФИО<input class="field" name="fullName" placeholder="Иванов Иван Иванович"></label>
+      <label>Телефон<input class="field" name="phone" type="tel" placeholder="+375291112233"></label>
+      <label>Email<input class="field" name="email" type="email" placeholder="name@mail.ru"></label>
+      <label class="full">Водительское удостоверение<input class="field" name="driverLicense" placeholder="AB123456"></label>
+      <div class="err" id="custErr"></div>
+    </div>
+    <div class="mact">
+      <button class="btn btn-ghost btn-sm" data-close>Отмена</button>
+      <button class="btn btn-primary btn-sm" id="custSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ОКНО: аренда ============ -->
+<div class="modal" id="mRent">
+  <div class="sheet">
+    <h3>Оформление аренды</h3>
+    <div class="form">
+      <label class="full">Автомобиль<select class="field" id="rCar"></select></label>
+      <label class="full">Клиент<select class="field" id="rCustomer"></select></label>
+      <label>Дата начала<input class="field" id="rStart" type="date"></label>
+      <label>Дата окончания<input class="field" id="rEnd" type="date"></label>
+      <div class="sum"><span>Итого</span><span id="rSum">—</span></div>
+      <div class="err" id="rentErr"></div>
+    </div>
+    <div class="mact">
+      <button class="btn btn-ghost btn-sm" data-close>Отмена</button>
+      <button class="btn btn-primary btn-sm" id="rentSave">Оформить</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const L = {
+  cat:  { Economy: "Эконом", Comfort: "Комфорт", Business: "Бизнес", Suv: "Внедорожник", Minivan: "Минивэн" },
+  fuel: { Petrol: "Бензин", Diesel: "Дизель", Electric: "Электро", Hybrid: "Гибрид" },
+  tr:   { Manual: "Механика", Automatic: "Автомат" },
+  st:   { Active: "Активна", Completed: "Завершена" }
+};
+const money = n => Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 2 }) + " руб.";
+const dFmt = s => new Date(s).toLocaleDateString("ru-RU");
+const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+
+/* ---------- вызов сервера ---------- */
+async function api(method, url, body) {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const text = await res.text();
+  let data = null; try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!res.ok) { const e = new Error(errText(data, res.status)); e.status = res.status; throw e; }
+  return data;
+}
+function errText(d, status) {
+  if (d && d.errors) return Object.values(d.errors).flat().join(" · ");
+  if (d && d.error) return d.error;
+  if (status === 404) return "Запись не найдена";
+  return "Не удалось выполнить действие";
+}
+function toast(msg, bad = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (bad ? " bad" : "");
+  t.textContent = msg; $("#toasts").append(t);
+  setTimeout(() => t.remove(), 4200);
+}
+
+/* ---------- меню и анимации ---------- */
+const nav = $("#nav");
+const onScroll = () => nav.classList.toggle("solid", scrollY > 40);
+addEventListener("scroll", onScroll, { passive: true }); onScroll();
+$("#burger").onclick = () => $("#links").classList.toggle("open");
+$$("#links a").forEach(a => a.addEventListener("click", () => $("#links").classList.remove("open")));
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
+const observeRv = () => $$(".rv:not(.in)").forEach(el => io.observe(el));
+
+/* ---------- статистика ---------- */
+function countUp(el, to) {
+  const from = Number(el.textContent) || 0, t0 = performance.now(), dur = 700;
+  const step = t => { const p = Math.min(1, (t - t0) / dur); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+async function loadStats() {
+  try { const s = await api("GET", "/api/stats"); $$("[data-k]").forEach(el => countUp(el, s[el.dataset.k] ?? 0)); } catch { }
+}
+
+/* ---------- фотографии автомобилей ----------
+   1) если у автомобиля задана ссылка imageUrl — берём её;
+   2) иначе ищем фото модели в Википедии (открытый API, без ключей);
+   3) если фото найти не удалось — остаётся иллюстрация категории. */
+const photoCache = new Map();
+async function wikiPhoto(title) {
+  const url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title.replace(/ /g, "_"));
+  try {
+    const r = await fetch(url); if (!r.ok) return null;
+    const j = await r.json();
+    const t = j.thumbnail && j.thumbnail.source; if (!t) return null;
+    const w = Math.min(960, (j.originalimage && j.originalimage.width) || 960);
+    return t.replace(/\/\d+px-/, "/" + w + "px-");
+  } catch { return null; }
+}
+async function findPhoto(car) {
+  if (car.imageUrl) return car.imageUrl;
+  const key = (car.brand + " " + car.model).toLowerCase();
+  if (!photoCache.has(key)) {
+    photoCache.set(key, (async () =>
+      (await wikiPhoto(car.brand + " " + car.model)) ||
+      (await wikiPhoto(car.brand + " " + car.model + " (car)")))());
+  }
+  return photoCache.get(key);
+}
+function applyPhotos(list) {
+  list.forEach(async c => {
+    const url = await findPhoto(c); if (!url) return;
+    const img = $(`#cars img[data-car="${c.id}"]`); if (!img) return;
+    const probe = new Image();
+    probe.onload = () => { img.src = url; img.className = "ph"; };
+    probe.src = url;
+  });
+}
+
+/* ---------- автопарк ---------- */
+let carsCache = [];
+async function loadCars() {
+  const q = new URLSearchParams();
+  if ($("#fSearch").value.trim()) q.set("search", $("#fSearch").value.trim());
+  if ($("#fCat").value) q.set("category", $("#fCat").value);
+  if ($("#fAvail").value) q.set("available", $("#fAvail").value);
+  const box = $("#cars");
+  try { carsCache = await api("GET", "/api/cars" + (q.toString() ? "?" + q : "")); }
+  catch (e) { box.innerHTML = `<div class="empty">Не удалось загрузить автомобили</div>`; return; }
+  if (!carsCache.length) { box.innerHTML = `<div class="empty">Автомобили не найдены. Измените условия поиска.</div>`; return; }
+  box.innerHTML = carsCache.map(c => `
+    <article class="car">
+      <div class="pic">
+        <span class="tag">${esc(L.cat[c.category])}</span>
+        <span class="state ${c.isAvailable ? "on" : "off"}">${c.isAvailable ? "Свободен" : "В аренде"}</span>
+        <img class="svg" data-car="${c.id}" src="/img/car-${esc(String(c.category).toLowerCase())}.svg" alt="${esc(c.fullName)}">
+      </div>
+      <div class="body">
+        <h3>${esc(c.brand)} ${esc(c.model)}</h3>
+        <div class="sub">${c.year} г.</div>
+        <div class="specs">
+          <span>⚙️ ${esc(L.tr[c.transmission])}</span>
+          <span>⛽ ${esc(L.fuel[c.fuelType])}</span>
+          <span>💺 ${c.seats} мест</span>
+        </div>
+        <p class="desc">${esc(c.description || "")}</p>
+        <div class="foot">
+          <div class="price">${money(c.dailyPrice)} <small>/ сутки</small></div>
+          <div class="acts">
+            <button class="btn btn-primary btn-sm" data-rent="${c.id}" ${c.isAvailable ? "" : "disabled"}>Арендовать</button>
+            <button class="btn btn-ghost btn-sm" data-edit="${c.id}" title="Изменить">✎</button>
+            <button class="btn btn-danger btn-sm" data-del="${c.id}" title="Удалить">🗑</button>
+          </div>
+        </div>
+      </div>
+    </article>`).join("");
+  applyPhotos(carsCache);
+}
+let tm;
+["fSearch", "fCat", "fAvail"].forEach(id => $("#" + id).addEventListener(id === "fSearch" ? "input" : "change", () => { clearTimeout(tm); tm = setTimeout(loadCars, 250); }));
+
+$("#cars").addEventListener("click", async e => {
+  const del = e.target.closest("[data-del]"), rent = e.target.closest("[data-rent]"), edit = e.target.closest("[data-edit]");
+  if (del) {
+    const car = carsCache.find(c => c.id == del.dataset.del);
+    if (!confirm(`Удалить автомобиль «${car.brand} ${car.model}»?`)) return;
+    try { await api("DELETE", `/api/cars/${car.id}`); toast("Автомобиль удалён"); refreshAll(); }
+    catch (err) { toast(err.message, true); }
+  }
+  if (rent) openRent({ carId: +rent.dataset.rent });
+  if (edit) openCar(carsCache.find(c => c.id == edit.dataset.edit));
+});
+
+/* ---------- окна ---------- */
+const open = id => $("#" + id).classList.add("open");
+const close = () => $$(".modal").forEach(m => m.classList.remove("open"));
+$$("[data-close]").forEach(b => b.onclick = close);
+$$(".modal").forEach(m => m.addEventListener("mousedown", e => { if (e.target === m) close(); }));
+addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+const showErr = (el, msg) => { el.textContent = msg; el.style.display = msg ? "block" : "none"; };
+const fld = (form, n) => $(`[name="${n}"]`, form);
+
+/* автомобиль: добавление и изменение */
+let editCarId = null;
+function openCar(car) {
+  const f = $("#carForm"); editCarId = car ? car.id : null;
+  $("#carTitle").textContent = car ? `Изменить: ${car.brand} ${car.model}` : "Новый автомобиль";
+  const d = car || { brand: "", model: "", year: 2024, seats: 5, category: "Economy", transmission: "Automatic", fuelType: "Petrol", dailyPrice: 80, imageUrl: "", description: "", isAvailable: true };
+  ["brand", "model", "year", "seats", "category", "transmission", "fuelType", "dailyPrice", "imageUrl", "description"].forEach(n => fld(f, n).value = d[n] ?? "");
+  fld(f, "isAvailable").checked = !!d.isAvailable;
+  showErr($("#carErr"), ""); open("mCar");
+}
+$("#btnAddCar").onclick = () => openCar(null);
+$("#carSave").onclick = async () => {
+  const f = $("#carForm");
+  const body = {
+    brand: fld(f, "brand").value.trim(), model: fld(f, "model").value.trim(),
+    year: +fld(f, "year").value, seats: +fld(f, "seats").value,
+    category: fld(f, "category").value, transmission: fld(f, "transmission").value, fuelType: fld(f, "fuelType").value,
+    dailyPrice: +fld(f, "dailyPrice").value,
+    imageUrl: fld(f, "imageUrl").value.trim() || null,
+    description: fld(f, "description").value.trim() || null,
+    isAvailable: fld(f, "isAvailable").checked
+  };
+  try {
+    if (editCarId) { await api("PUT", `/api/cars/${editCarId}`, body); toast("Изменения сохранены"); }
+    else { await api("POST", "/api/cars", body); toast("Автомобиль добавлен"); }
+    close(); refreshAll();
+  } catch (e) { showErr($("#carErr"), e.message); }
+};
+
+/* ---------- клиенты ---------- */
+let custCache = [], rentCache = [];
+async function loadCustomers() {
+  const box = $("#people");
+  try { custCache = await api("GET", "/api/customers"); }
+  catch { box.innerHTML = `<div class="empty">Не удалось загрузить клиентов</div>`; return; }
+  if (!custCache.length) { box.innerHTML = `<div class="empty">Клиентов пока нет</div>`; return; }
+  box.innerHTML = custCache.map(c => {
+    const mine = rentCache.filter(r => r.customerId === c.id), act = mine.filter(r => r.status === "Active").length;
+    return `
+    <article class="person">
+      <div class="ph-top"><div class="avatar">${esc(initials(c.fullName))}</div><h3>${esc(c.fullName)}</h3></div>
+      <div class="meta">
+        <div>📞 <b>${esc(c.phone)}</b></div>
+        <div>✉️ ${c.email ? esc(c.email) : "—"}</div>
+        <div>🪪 ВУ: ${esc(c.driverLicense)}</div>
+      </div>
+      <div class="cnt">Аренд всего: <b style="color:#fff">${mine.length}</b>${act ? ` · активных: <b style="color:var(--a1)">${act}</b>` : ""}</div>
+      <div class="acts">
+        <button class="btn btn-primary btn-sm" data-rentfor="${c.id}">Арендовать</button>
+        <button class="btn btn-ghost btn-sm" data-cedit="${c.id}" title="Изменить">✎</button>
+        <button class="btn btn-danger btn-sm" data-cdel="${c.id}" title="Удалить">🗑</button>
+      </div>
+    </article>`;
+  }).join("");
+}
+$("#people").addEventListener("click", async e => {
+  const rf = e.target.closest("[data-rentfor]"), ed = e.target.closest("[data-cedit]"), dl = e.target.closest("[data-cdel]");
+  if (rf) openRent({ customerId: +rf.dataset.rentfor });
+  if (ed) openCust(custCache.find(c => c.id == ed.dataset.cedit));
+  if (dl) {
+    const c = custCache.find(x => x.id == dl.dataset.cdel);
+    if (!confirm(`Удалить клиента «${c.fullName}»?`)) return;
+    try { await api("DELETE", `/api/customers/${c.id}`); toast("Клиент удалён"); refreshAll(); }
+    catch (err) { toast(err.message, true); }
+  }
+});
+let editCustId = null;
+function openCust(c) {
+  const f = $("#custForm"); editCustId = c ? c.id : null;
+  $("#custTitle").textContent = c ? "Изменить клиента" : "Новый клиент";
+  const d = c || { fullName: "", phone: "", email: "", driverLicense: "" };
+  ["fullName", "phone", "email", "driverLicense"].forEach(n => fld(f, n).value = d[n] ?? "");
+  showErr($("#custErr"), ""); open("mCust");
+}
+$("#btnAddCust").onclick = () => openCust(null);
+$("#custSave").onclick = async () => {
+  const f = $("#custForm");
+  const body = { fullName: fld(f, "fullName").value.trim(), phone: fld(f, "phone").value.trim(),
+                 email: fld(f, "email").value.trim() || null, driverLicense: fld(f, "driverLicense").value.trim() };
+  try {
+    if (editCustId) { await api("PUT", `/api/customers/${editCustId}`, body); toast("Изменения сохранены"); }
+    else { await api("POST", "/api/customers", body); toast("Клиент добавлен"); }
+    close(); refreshAll();
+  } catch (e) { showErr($("#custErr"), e.message); }
+};
+
+/* ---------- аренды ---------- */
+const iso = d => d.toISOString().slice(0, 10);
+async function openRent({ carId, customerId } = {}) {
+  const [free, customers] = await Promise.all([api("GET", "/api/cars?available=true"), api("GET", "/api/customers")]);
+  if (!free.length) { toast("Сейчас нет свободных автомобилей", true); return; }
+  if (!customers.length) { toast("Сначала добавьте клиента", true); return; }
+  rentCars = free;
+  $("#rCar").innerHTML = free.map(c => `<option value="${c.id}">${esc(c.brand)} ${esc(c.model)} — ${money(c.dailyPrice)}/сут.</option>`).join("");
+  $("#rCustomer").innerHTML = customers.map(c => `<option value="${c.id}">${esc(c.fullName)}</option>`).join("");
+  if (carId && free.some(c => c.id === carId)) $("#rCar").value = carId;
+  if (customerId) $("#rCustomer").value = customerId;
+  $("#rStart").value = iso(new Date()); $("#rEnd").value = iso(new Date(Date.now() + 86400000 * 3));
+  showErr($("#rentErr"), ""); calcSum(); open("mRent");
+}
+let rentCars = [];
+function calcSum() {
+  const car = rentCars.find(c => c.id == $("#rCar").value);
+  const days = Math.round((new Date($("#rEnd").value) - new Date($("#rStart").value)) / 86400000);
+  $("#rSum").textContent = days > 0 && car ? `${days} сут. × ${car.dailyPrice} = ${money(days * car.dailyPrice)}` : "—";
+}
+$("#rStart").onchange = $("#rEnd").onchange = $("#rCar").onchange = calcSum;
+$("#btnNewRent").onclick = () => openRent();
+$("#rentSave").onclick = async () => {
+  try {
+    const r = await api("POST", "/api/rentals", { carId: +$("#rCar").value, customerId: +$("#rCustomer").value, startDate: $("#rStart").value, endDate: $("#rEnd").value });
+    close(); toast(`Аренда №${r.id} оформлена на сумму ${money(r.totalPrice)}`); refreshAll();
+  } catch (e) { showErr($("#rentErr"), e.message); }
+};
+function drawRentals() {
+  const rows = $("#rentRows"), f = $("#fRent").value;
+  const list = rentCache.filter(r => !f || r.status === f).slice().reverse();
+  rows.innerHTML = list.length ? list.map(r => `
+    <tr>
+      <td>#${r.id}</td><td><b>${esc(r.carName)}</b></td><td>${esc(r.customerName)}</td>
+      <td>${dFmt(r.startDate)} — ${dFmt(r.endDate)}</td><td>${money(r.totalPrice)}</td>
+      <td><span class="pill ${r.status.toLowerCase()}">${esc(L.st[r.status])}</span></td>
+      <td>${r.status === "Active"
+        ? `<button class="btn btn-ghost btn-sm" data-done="${r.id}">Завершить</button>`
+        : `<button class="btn btn-danger btn-sm" data-rdel="${r.id}" title="Удалить">🗑</button>`}</td>
+    </tr>`).join("") : `<tr><td colspan="7" style="text-align:center;color:var(--muted)">Аренд нет</td></tr>`;
+}
+async function loadRentals() {
+  try { rentCache = await api("GET", "/api/rentals"); }
+  catch { $("#rentRows").innerHTML = `<tr><td colspan="7">Не удалось загрузить аренды</td></tr>`; return; }
+  drawRentals();
+}
+$("#fRent").onchange = drawRentals;
+$("#rentRows").addEventListener("click", async e => {
+  const done = e.target.closest("[data-done]"), del = e.target.closest("[data-rdel]");
+  try {
+    if (done) { await api("POST", `/api/rentals/${done.dataset.done}/complete`); toast("Аренда завершена"); refreshAll(); }
+    if (del) { if (!confirm("Удалить запись об аренде?")) return; await api("DELETE", `/api/rentals/${del.dataset.rdel}`); toast("Запись удалена"); refreshAll(); }
+  } catch (err) { toast(err.message, true); }
+});
+
+/* ---------- старт ---------- */
+async function refreshAll() {
+  loadStats(); loadCars();
+  await loadRentals(); await loadCustomers();   // клиентам нужен список аренд для счётчиков
+}
+refreshAll(); observeRv();
+</script>
+</body>
+</html>
