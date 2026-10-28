@@ -1,8 +1,6 @@
-# wt-lab6-6minimalapi-kleshchenok
+# t-lab7-7postgres-efcore-kleshchenok
 
-Лабораторная работа № 6 «Web-технологии» — **REST API на ASP.NET Core Minimal API** и публикация на Render.
-Предметная область: **прокат автомобилей** (основная сущность `Car`, как в WT-3, WT-4, WT-5).
-Хранение данных — в памяти приложения 
+Лабораторная работа №7
 
 - GitHub: https://github.com/alishaartemevaa05-netizen/wt-lab6-6minimalapi-kleshchenok
 - Render: https://wt-lab6-6minimalapi-kleshchenok-1.onrender.com 
