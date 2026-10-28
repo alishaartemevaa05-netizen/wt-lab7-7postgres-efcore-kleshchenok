@@ -165,9 +165,9 @@ cars.MapPost("", async (Car car, AppDbContext db) =>
     var errors = ModelValidator.Validate(car);
     if (errors is not null) return Results.ValidationProblem(errors);
 
-    car.Id = 0;                       // Id создаёт база (identity), клиентское значение игнорируем
+    car.Id = 0;                       
     db.Cars.Add(car);
-    await db.SaveChangesAsync();      // здесь выполняется INSERT ... RETURNING "Id"
+    await db.SaveChangesAsync();     
     return Results.Created($"/api/cars/{car.Id}", car);
 }).WithSummary("Создать автомобиль");
 
@@ -177,7 +177,7 @@ cars.MapPut("/{id:int}", async (int id, Car updated, AppDbContext db) =>
     var errors = ModelValidator.Validate(updated);
     if (errors is not null) return Results.ValidationProblem(errors);
 
-    var car = await db.Cars.FirstOrDefaultAsync(c => c.Id == id);   // объект попадает под наблюдение EF (tracking)
+    var car = await db.Cars.FirstOrDefaultAsync(c => c.Id == id);   
     if (car is null) return Results.NotFound();
 
     car.Brand = updated.Brand;
@@ -192,7 +192,7 @@ cars.MapPut("/{id:int}", async (int id, Car updated, AppDbContext db) =>
     car.Description = updated.Description;
     car.ImageUrl = updated.ImageUrl;
 
-    await db.SaveChangesAsync();      // EF сам видит, какие свойства изменились, и формирует UPDATE
+    await db.SaveChangesAsync();      
     return Results.Ok(car);
 }).WithSummary("Изменить автомобиль");
 
@@ -202,8 +202,7 @@ cars.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
     var car = await db.Cars.FirstOrDefaultAsync(c => c.Id == id);
     if (car is null) return Results.NotFound();
 
-    // Внешний ключ запрещает удалять автомобиль, по которому есть аренды — сообщаем понятную ошибку.
-    if (await db.Rentals.AnyAsync(r => r.CarId == id))
+     if (await db.Rentals.AnyAsync(r => r.CarId == id))
         return Results.Conflict(new { error = "Нельзя удалить автомобиль: по нему есть аренды." });
 
     db.Cars.Remove(car);
@@ -269,8 +268,6 @@ customers.MapDelete("/{id:int}", async (int id, AppDbContext db) =>
 // ───────────────────────── Аренды ─────────────────────────
 
 var rentals = api.MapGroup("/rentals").WithTags("Rentals");
-
-// Соединяем три таблицы (JOIN) и получаем названия вместо Id — одним SQL-запросом.
 rentals.MapGet("", async (AppDbContext db) =>
 {
     var list = await (
