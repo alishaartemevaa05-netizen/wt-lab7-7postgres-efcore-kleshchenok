@@ -57,4 +57,8 @@ public class Car
     [Display(Name = "Дата добавления")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [StringLength(30)]
+    [Display(Name = "Цвет")]
+    public string? Color { get; set; }
+
 }
