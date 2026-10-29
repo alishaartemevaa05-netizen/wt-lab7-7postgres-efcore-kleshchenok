@@ -15,7 +15,15 @@
        Он читает OpenAPI-документ, который отдаёт само приложение (/openapi/v1.json). -->
   <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
   <script>
-    window.ui = SwaggerUIBundle({ url: "/openapi/v1.json", dom_id: "#swagger-ui", deepLinking: true });
+      window.ui = SwaggerUIBundle({
+    url: "/openapi/v1.json",
+    dom_id: "#swagger-ui",
+    deepLinking: true,
+    requestInterceptor: req => {
+        if (location.protocol === "https:" && req.url.startsWith("http://")) req.url = "https://" + req.url.slice(7);
+        return req;
+    }
+});
   </script>
 </body>
 </html>
